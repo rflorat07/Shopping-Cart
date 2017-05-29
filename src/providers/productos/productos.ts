@@ -11,25 +11,33 @@ export class ProductosProvider {
   productos: any[] = [];
 
   constructor(public http: Http) {
-    console.log('Hello ProductosProvider Provider');
+    this.cargar_todos();
   }
 
   cargar_todos() {
-    let url = URL_SERVICIOS + "productos/todos/" + this.pagina;
 
-    this.http.get(url)
-    .map((resp) => resp.json())
-    .subscribe(data => {
-      
-      console.log(data);
+    let promesa = new Promise((resolve, reject) => {
 
-      if (data.error) {
-        //Aqui hay un problema
-      } else {
-        this.productos.push(...data.productos);
-        this.pagina +=1;
-      }
+      let url = URL_SERVICIOS + "/productos/todos/" + this.pagina;
+
+      this.http.get(url)
+        .map((resp) => resp.json())
+        .subscribe(data => {
+          if (data.error) {
+            //Aqui hay un problema
+          } else {
+            this.productos.push(...data.productos);
+            this.pagina += 1;
+          }
+          resolve();
+        });
+
     });
+
+    return promesa;
+
   }
+
+
 
 }
