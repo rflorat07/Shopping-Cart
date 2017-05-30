@@ -12,6 +12,7 @@ import { URL_SERVICIOS } from './../../config/url.servicios';
 export class CarritoProvider {
 
   items: any[] = [];
+  ordenes: any[] = [];
   total_carrito: number = 0;
 
   constructor(
@@ -49,7 +50,7 @@ export class CarritoProvider {
       .map(resp => resp.json())
       .subscribe(resp => {
         let respuesta = resp;
-        
+
         if (respuesta.error) {
           //mostramos el error
           this.alertCtrl.create({
@@ -152,6 +153,27 @@ export class CarritoProvider {
 
     return promesa;
 
+  }
+
+  cargar_ordenes() {
+    let url = `${URL_SERVICIOS}/pedidos/obtener_pedidos/${this.usuarioProvider.token}/${this.usuarioProvider.id_usuario}`;
+
+    this.http.get(url)
+      .map(resp => resp.json())
+      .subscribe(data => {
+        if (data.error) {
+          //manejar el error
+        } else {
+          this.ordenes = data.ordenes;
+        }
+      })
+  }
+
+
+  borrar_order(order_id: string) {
+    let url = `${URL_SERVICIOS}/pedidos/borrar_pedido/${this.usuarioProvider.token}/${this.usuarioProvider.id_usuario}/${order_id}`;
+
+    return this.http.delete(url).map(resp => resp.json());
   }
 
 
