@@ -1,15 +1,18 @@
 import { Injectable } from '@angular/core';
 import { AlertController, Platform, ModalController } from 'ionic-angular';
-import { Http } from '@angular/http';
+import { Http, URLSearchParams } from '@angular/http';
 import { Storage } from '@ionic/storage';
 import 'rxjs/add/operator/map';
 
 import { UsuarioProvider } from './../usuario/usuario';
 
+import { URL_SERVICIOS } from './../../config/url.servicios';
+
 @Injectable()
 export class CarritoProvider {
 
   items: any[] = [];
+  total_carrito: number = 0;
 
   constructor(
     public http: Http,
@@ -18,7 +21,53 @@ export class CarritoProvider {
     private modalCtrl: ModalController,
     private alertCtrl: AlertController,
     private usuarioProvider: UsuarioProvider) {
+
     this.cargar_storage();
+    this.actualizar_total();
+  }
+
+  remover_item(idx: number) {
+    this.items.splice(idx, 1);
+    this.guardar_storage();
+    this.actualizar_total();
+  }
+
+  realizar_pedido() {
+
+    let data = new URLSearchParams();
+    let codigos: string[] = [];
+
+    for (let item of this.items) {
+      codigos.push(item.codigo);
+    }
+
+    data.append("items", codigos.join(","));
+
+    let url = `${URL_SERVICIOS}/pedidos/realizar_orden/${this.usuarioProvider.token}/${this.usuarioProvider.id_usuario}`;
+
+    this.http.post(url, data)
+      .map(resp => resp.json())
+      .subscribe(resp => {
+        let respuesta = resp;
+        
+        if (respuesta.error) {
+          //mostramos el error
+          this.alertCtrl.create({
+            title: "Error en la order !",
+            subTitle: respuesta.mensaje,
+            buttons: ["OK"]
+          }).present();
+        } else {
+          //todo bien!
+          this.items = [];
+          this.guardar_storage();
+          this.alertCtrl.create({
+            title: "Order realizada!",
+            subTitle: "Nos contactaremos con usted pròximamente",
+            buttons: ["OK"]
+          }).present();
+        }
+      });
   }
 
   ver_carrito() {
@@ -55,7 +104,15 @@ export class CarritoProvider {
       }
     }
     this.items.push(articulo);
+    this.actualizar_total();
     this.guardar_storage();
+  }
+
+  actualizar_total() {
+    this.total_carrito = 0;
+    for (let item of this.items) {
+      this.total_carrito += Number(item.precio_compra);
+    }
   }
 
   private guardar_storage() {
