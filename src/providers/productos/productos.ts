@@ -11,6 +11,7 @@ export class ProductosProvider {
   lineas: any[] = [];
   productos: any[] = [];
   categoria: any[] = [];
+  resultados: any[] = [];
 
   constructor(public http: Http) {
     this.cargar_todos();
@@ -68,6 +69,14 @@ export class ProductosProvider {
       })
   }
 
+  buscar_producto(termino: string) {
+    let url = URL_SERVICIOS + "/productos/buscar/" + termino;
 
+    this.http.get(url)
+      .subscribe(resp => {
+        let data = resp.json();
+        this.resultados = data.productos;
+      })
+  }
 
 }
